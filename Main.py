@@ -4,7 +4,7 @@
 =======================================================
   Môn học : Lập trình Python
   Nhóm    : 4 thành viên
-    - Nguyễn Văn T  (nhóm trưởng) - TrangDanhSach
+    - Nguyễn Văn A  (nhóm trưởng) - TrangDanhSach
     - Trần Thị B                   - TrangThem
     - Lê Văn C                     - TrangSua
     - Phạm Thị D                   - Model & CSV

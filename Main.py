@@ -1,10 +1,10 @@
 """
 =======================================================
-  BÀI TẬP LỚN: QUẢN LÝ TẠP HÓa
+  BÀI TẬP LỚN: QUẢN LÝ TẠP HÓA
 =======================================================
   Môn học : Lập trình Python
   Nhóm    : 4 thành viên
-    - Nguyễn Văn T  (nhóm trưởng) - TrangDanhSach
+    - Nguyễn Văn A  (nhóm trưởng) - TrangDanhSach
     - Trần Thị B                   - TrangThem
     - Lê Văn C                     - TrangSua
     - Phạm Thị D                   - Model & CSV

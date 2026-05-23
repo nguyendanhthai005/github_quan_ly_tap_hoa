@@ -1,7 +1,4 @@
-id,ten_sp,loai,gia,so_luong,nha_cung_cap
-1,Gạo ST25,Lương thực,25000,50,Cty Lương thực An Giang
-2,Nước mắm Chinsu,Gia vị,18000,30,Masan
-3,Dầu ăn Neptune 1L,Dầu ăn,45000,20,Kido
-4,Mì tôm Hảo Hảo,Mì gói,4500,100,Acecook
-5,Đường Biên Hòa 1kg,Gia vị,22000,40,Biên Hòa
-6,Mì Hảo Hảo,Mì gói,6000,4000,Acecook Việt Nam
+id,ma_sp,ten_sp,so_luong,don_gia
+1,SP01,Kẹo dừa,50,2000
+2,SP02,Bánh mì gối,18,5000
+3,SP03,Nước suối Lavie,100,7000

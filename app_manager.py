@@ -1,50 +1,39 @@
 import tkinter as tk
+from page.sanpham_page import SanphamPage
+from page.banhang_page import BanHangPage
+# from page.naphang_page import NhapHangPage
 
-
-class AppManager:
-    """
-    Lớp quản lý ứng dụng:
-    - Tạo cửa sổ chính (root)
-    - Điều hướng giữa các trang (Frame)
-    - Mỗi lần chỉ hiện 1 trang
-    """
-
+class QuanLyTapHoaManager:
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("🛒  Quản Lý Tạp Hóa")
-        self.root.geometry("900x600")
-        self.root.resizable(True, True)
-        self.root.configure(bg="#f0f0f0")
-
-        # Từ điển chứa các trang đã tạo  {tên_trang: đối_tượng_Frame}
-        self.cac_trang = {}
-
-        # Trang hiện đang hiện
+        self.goc = tk.Tk()
+        self.goc.title("Ứng dụng Quản lý Tạp Hóa")
+        self.goc.geometry("1000x500")
         self.trang_hien_tai = None
+        self.hien_thi_sanpham_page()
 
-    def them_trang(self, ten_trang, trang):
-        """Đăng ký một trang mới vào app."""
-        self.cac_trang[ten_trang] = trang
-
-    def hien_trang(self, ten_trang, **kwargs):
-        """
-        Ẩn trang đang hiện và hiện trang mới.
-        kwargs dùng để truyền dữ liệu vào trang (vd: truyền object sản phẩm cần sửa).
-        """
-        # Ẩn trang cũ
+    def xoa_trang_hien_tai(self):
+        """Xóa tất cả widget của page hiện tại"""
         if self.trang_hien_tai:
-            self.trang_hien_tai.pack_forget()
+            for widget in self.goc.winfo_children():
+                widget.destroy()
 
-        # Lấy trang mới
-        trang = self.cac_trang[ten_trang]
+    def hien_thi_sanpham_page(self):
+        """Hiển thị trang quản lý sản phẩm"""
+        self.xoa_trang_hien_tai()
+        self.goc.geometry("1000x450")
+        self.trang_hien_tai = SanphamPage(self.goc, self)
 
-        # Nếu trang có hàm 'tai_du_lieu' thì gọi để làm mới nội dung
-        if hasattr(trang, "tai_du_lieu"):
-            trang.tai_du_lieu(**kwargs)
+    def hien_thi_banhang_page(self):
+        self.xoa_trang_hien_tai()
+        self.goc.geometry("1100x550")
+        self.trang_hien_tai = BanHangPage(self.goc, self)
 
-        trang.pack(fill="both", expand=True)
-        self.trang_hien_tai = trang
+    def hien_thi_naphang_page(self):
+        """Chuyển đến trang Nhập hàng (sẽ phát triển sau)"""
+        self.xoa_trang_hien_tai()
+        tk.Label(self.goc, text="📥 Chức năng Nhập hàng\n(Đang được phát triển)", font=("Arial", 20)).pack(pady=150)
+        tk.Button(self.goc, text="⬅ Quay lại", command=self.hien_thi_sanpham_page).pack(pady=10)
 
     def chay(self):
-        """Khởi chạy vòng lặp giao diện."""
-        self.root.mainloop()
+        """Chạy ứng dụng"""
+        self.goc.mainloop()

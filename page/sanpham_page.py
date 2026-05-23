@@ -1,190 +1,206 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from model.sanpham import doc_du_lieu, xoa_san_pham, tim_kiem
+from tkinter import messagebox, ttk, Toplevel
+from model.sanpham_model import SanphamModel
 
 
-class TrangDanhSach(tk.Frame):
-    """
-    Trang chính: hiển thị danh sách toàn bộ sản phẩm.
-    Có nút: Thêm, Sửa, Xóa, Tìm kiếm, Làm mới.
-    Thành viên phụ trách: Nguyễn Văn A (nhóm trưởng)
-    """
-
-    def __init__(self, master, app):
-        super().__init__(master, bg="#f0f0f0")
-        self.app = app  # Tham chiếu tới AppManager để điều hướng
-        self._tao_giao_dien()
-
-    # ── Tạo giao diện ─────────────────────────────────────────────────────
-
-    def _tao_giao_dien(self):
-        # --- Tiêu đề ---
-        tk.Label(
-            self,
-            text="🛒  QUẢN LÝ TẠP HÓA",
-            font=("Arial", 18, "bold"),
-            bg="#2c6fad", fg="white",
-            pady=12
-        ).pack(fill="x")
-
-        # --- Khu vực tìm kiếm ---
-        frame_tk = tk.Frame(self, bg="#f0f0f0", pady=8)
-        frame_tk.pack(fill="x", padx=15)
-
-        tk.Label(frame_tk, text="Tìm kiếm:", font=("Arial", 11), bg="#f0f0f0").pack(side="left")
-        self.o_tim_kiem = tk.Entry(frame_tk, font=("Arial", 11), width=25)
-        self.o_tim_kiem.pack(side="left", padx=6)
-        tk.Button(
-            frame_tk, text=" Tìm", font=("Arial", 11),
-            bg="#2483BD", fg="white", command=self._tim_kiem
-        ).pack(side="left", padx=4)
-        tk.Button(
-            frame_tk, text=" Làm mới", font=("Arial", 11),
-            bg="#888", fg="white", command=self._lam_moi
-        ).pack(side="left", padx=4)
-
-        # --- Bảng dữ liệu (Treeview) ---
-        frame_bang = tk.Frame(self, bg="#f0f0f0")
-        frame_bang.pack(fill="both", expand=True, padx=15, pady=5)
-
-        cot = ("ID", "Tên sản phẩm", "Loại", "Giá (VNĐ)", "Số lượng", "Nhà cung cấp")
-        self.bang = ttk.Treeview(frame_bang, columns=cot, show="headings", height=18)
-
-        # Đặt tiêu đề và độ rộng mỗi cột
-        do_rong = [40, 180, 100, 100, 80, 180]
-        for col, w in zip(cot, do_rong):
-            self.bang.heading(col, text=col)
-            self.bang.column(col, width=w, anchor="center")
-
-        # Thanh cuộn dọc
-        thanh_cuon = ttk.Scrollbar(frame_bang, orient="vertical", command=self.bang.yview)
-        self.bang.configure(yscrollcommand=thanh_cuon.set)
-        self.bang.pack(side="left", fill="both", expand=True)
-        thanh_cuon.pack(side="right", fill="y")
-
-        # --- Khu vực nút bấm ---
-        frame_nut = tk.Frame(self, bg="#f0f0f0", pady=10)
-        frame_nut.pack()
-
-        tk.Button(
-            frame_nut, text="➕  Thêm sản phẩm",
-            font=("Arial", 11, "bold"), bg="#27ae60", fg="white",
-            width=17, command=self._mo_them
-        ).grid(row=0, column=0, padx=8)
-
-        tk.Button(
-            frame_nut, text="✏️  Sửa sản phẩm",
-            font=("Arial", 11, "bold"), bg="#e67e22", fg="white",
-            width=17, command=self._mo_sua
-        ).grid(row=0, column=1, padx=8)
-
-        tk.Button(
-            frame_nut, text="🗑️  Xóa sản phẩm",
-            font=("Arial", 11, "bold"), bg="#c0392b", fg="white",
-            width=17, command=self._xoa
-        ).grid(row=0, column=2, padx=8)
-
-        tk.Button(
-            frame_nut, text="📊  Thống kê",
-            font=("Arial", 11, "bold"), bg="#8e44ad", fg="white",
-            width=17, command=self._thong_ke
-        ).grid(row=0, column=3, padx=8)
-
-        # --- Nhãn thông tin ở cuối ---
-        self.nhan_tt = tk.Label(self, text="", font=("Arial", 10), bg="#f0f0f0", fg="#555")
-        self.nhan_tt.pack(pady=4)
-
-    # ── Tải dữ liệu lên bảng ──────────────────────────────────────────────
-
-    def tai_du_lieu(self, **kwargs):
-        """Đọc từ CSV và hiện lên bảng. Được gọi mỗi khi quay về trang này."""
-        self._xoa_bang()
-        ds = doc_du_lieu()
-        for sp in ds:
-            self.bang.insert("", "end", values=(
-                sp.id, sp.ten_sp, sp.loai,
-                f"{sp.gia:,}", sp.so_luong, sp.nha_cung_cap
-            ))
-        self.nhan_tt.config(text=f"Tổng số sản phẩm: {len(ds)}")
-
-    def _xoa_bang(self):
-        """Xóa toàn bộ dòng trong bảng."""
-        for row in self.bang.get_children():
-            self.bang.delete(row)
-
-    # ── Xử lý tìm kiếm ────────────────────────────────────────────────────
-
-    def _tim_kiem(self):
-        tu_khoa = self.o_tim_kiem.get().strip()
-        if not tu_khoa:
-            self.tai_du_lieu()
-            return
-        self._xoa_bang()
-        ket_qua = tim_kiem(tu_khoa)
-        for sp in ket_qua:
-            self.bang.insert("", "end", values=(
-                sp.id, sp.ten_sp, sp.loai,
-                f"{sp.gia:,}", sp.so_luong, sp.nha_cung_cap
-            ))
-        self.nhan_tt.config(text=f"Tìm thấy: {len(ket_qua)} sản phẩm")
-
-    def _lam_moi(self):
-        self.o_tim_kiem.delete(0, "end")
+class SanphamPage:
+    def __init__(self, master, app_manager):
+        self.master = master
+        self.app_manager = app_manager
+        self.sp = SanphamModel("data/sanpham.csv", ['id', 'ma_sp', 'ten_sp', 'so_luong', 'don_gia'])
+        self.cau_hinh()
+        self.xem_giao_dien()
         self.tai_du_lieu()
 
-    # ── Lấy sản phẩm đang chọn ────────────────────────────────────────────
+    def cau_hinh(self):
+        self.master.title("Quản lý hàng hóa tạp hóa")
+        self.master.geometry("1000x400")
 
-    def _lay_sp_chon(self):
-        """Trả về (id, ten_sp, ...) của dòng đang chọn, hoặc None."""
-        chon = self.bang.selection()
-        if not chon:
-            messagebox.showwarning("Chưa chọn", "Vui lòng chọn một sản phẩm trong bảng!")
-            return None
-        return self.bang.item(chon[0])["values"]
+    def xem_giao_dien(self):
+        # Menu điều hướng trên cùng
+        menu_frame = tk.Frame(self.master, bg="#2c3e50", height=50)
+        menu_frame.pack(fill="x", side="top")
+        menu_frame.pack_propagate(False)
 
-    # ── Điều hướng trang ──────────────────────────────────────────────────
+        tk.Button(menu_frame, text="📦 Quản lý hàng", command=self.app_manager.hien_thi_sanpham_page, bg="#2c3e50",
+                  fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=15, pady=10)
+        tk.Button(menu_frame, text="🛒 Bán hàng", command=self.app_manager.hien_thi_banhang_page, bg="#2c3e50",
+                  fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=10, pady=10)
+        tk.Button(menu_frame, text="📥 Nhập hàng", command=self.app_manager.hien_thi_naphang_page, bg="#2c3e50",
+                  fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=10, pady=10)
+        tk.Button(menu_frame, text="🔄 Làm mới", command=self.tai_du_lieu, bg="#27ae60", fg="white", relief="flat",
+                  font=("Arial", 11)).pack(side="right", padx=15, pady=10)
 
-    def _mo_them(self):
-        self.app.hien_trang("them")
+        # Tiêu đề
+        tk.Label(self.master, text="Danh sách sản phẩm trong kho", font=("Arial", 20, "bold")).pack(pady=10)
 
-    def _mo_sua(self):
-        values = self._lay_sp_chon()
-        if values:
-            self.app.hien_trang("sua", id_sp=values[0])
+        # Frame nút chức năng
+        button_frame = tk.Frame(self.master)
+        button_frame.pack(pady=5)
 
-    # ── Xóa sản phẩm ──────────────────────────────────────────────────────
+        tk.Button(button_frame, text="➕ Thêm sản phẩm", command=self.mo_form_them).pack(side="left", padx=5)
+        tk.Button(button_frame, text="🔙 Quay lại", command=self.app_manager.hien_thi_sanpham_page).pack(side="right",
+                                                                                                        padx=5)
 
-    def _xoa(self):
-        values = self._lay_sp_chon()
-        if not values:
-            return
-        xac_nhan = messagebox.askyesno(
-            "Xác nhận xóa",
-            f"Bạn có chắc muốn xóa sản phẩm:\n'{values[1]}'?"
-        )
-        if xac_nhan:
-            xoa_san_pham(values[0])
-            messagebox.showinfo("Thành công", "Đã xóa sản phẩm!")
+        # Bảng hiển thị (Treeview)
+        tree_frame = tk.Frame(self.master)
+        tree_frame.pack(expand=True, fill="both", padx=20, pady=10)
+
+        columns = ("STT", "ma_sp", "ten_sp", "so_luong", "don_gia", "Sửa", "Xóa")
+        self.bang_hang = ttk.Treeview(tree_frame, columns=columns, show="headings", height=12)
+
+        self.bang_hang.heading("STT", text="STT")
+        self.bang_hang.heading("ma_sp", text="Mã SP")
+        self.bang_hang.heading("ten_sp", text="Tên sản phẩm")
+        self.bang_hang.heading("so_luong", text="Số lượng")
+        self.bang_hang.heading("don_gia", text="Đơn giá (VNĐ)")
+        self.bang_hang.heading("Sửa", text="Sửa")
+        self.bang_hang.heading("Xóa", text="Xóa")
+
+        self.bang_hang.column("STT", width=50, anchor="center")
+        self.bang_hang.column("ma_sp", width=100, anchor="center")
+        self.bang_hang.column("ten_sp", width=200, anchor="center")
+        self.bang_hang.column("so_luong", width=100, anchor="center")
+        self.bang_hang.column("don_gia", width=150, anchor="center")
+        self.bang_hang.column("Sửa", width=70, anchor="center")
+        self.bang_hang.column("Xóa", width=70, anchor="center")
+
+        # Gắn sự kiện click chuột
+        self.bang_hang.bind("<ButtonRelease-1>", self.xu_ly_nhan_chuot)
+
+        # Thanh cuộn
+        scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.bang_hang.yview)
+        self.bang_hang.configure(yscrollcommand=scrollbar.set)
+
+        self.bang_hang.pack(side="left", expand=True, fill="both")
+        scrollbar.pack(side="right", fill="y")
+
+        # Thanh trạng thái
+        self.status_label = tk.Label(self.master, text="Sẵn sàng", relief="sunken", anchor="w")
+        self.status_label.pack(side="bottom", fill="x")
+
+    def tai_du_lieu(self):
+        """Tải danh sách từ CSV và hiển thị lên bảng"""
+        du_lieu = self.sp.danh_sach(1, 10000)
+
+        # Xóa dữ liệu cũ trên bảng trước khi tải mới
+        for i in self.bang_hang.get_children():
+            self.bang_hang.delete(i)
+
+        for i, item in enumerate(du_lieu["data"], start=1):
+            self.bang_hang.insert("", "end", values=(i, item["ma_sp"], item["ten_sp"],
+                                                     item["so_luong"], item["don_gia"],
+                                                     "✏️ Sửa", "🗑️ Xóa"))
+
+    def mo_form_them(self):
+        """Mở cửa sổ mới để nhập thông tin sản phẩm"""
+        form = Toplevel(self.master)
+        form.title("Thêm sản phẩm mới")
+        form.geometry("300x320")
+        form.grab_set()  # Khóa cửa sổ chính cho đến khi đóng form
+
+        tk.Label(form, text="Mã SP:").pack(pady=5)
+        entry_ma = tk.Entry(form)
+        entry_ma.pack()
+
+        tk.Label(form, text="Tên SP:").pack(pady=5)
+        entry_ten = tk.Entry(form)
+        entry_ten.pack()
+
+        tk.Label(form, text="Số lượng:").pack(pady=5)
+        entry_sl = tk.Entry(form)
+        entry_sl.pack()
+
+        tk.Label(form, text="Đơn giá:").pack(pady=5)
+        entry_gia = tk.Entry(form)
+        entry_gia.pack()
+
+        def xu_ly_luu():
+            ma = entry_ma.get().strip()
+            ten = entry_ten.get().strip()
+            sl = entry_sl.get().strip()
+            gia = entry_gia.get().strip()
+
+            if not (ma and ten and sl and gia):
+                messagebox.showwarning("Cảnh báo", "Vui lòng nhập đầy đủ thông tin!")
+                return
+
+            new_data = {
+                "id": str(self.sp.lay_id_tiep_theo()),
+                "ma_sp": ma,
+                "ten_sp": ten,
+                "so_luong": sl,
+                "don_gia": gia
+            }
+            self.sp.them(new_data)
+            messagebox.showinfo("Thành công", "Đã thêm sản phẩm vào kho!")
+            form.destroy()
             self.tai_du_lieu()
 
-    # ── Thống kê đơn giản ─────────────────────────────────────────────────
+        tk.Button(form, text="💾 Lưu sản phẩm", command=xu_ly_luu, bg="#27ae60", fg="white").pack(pady=20)
 
-    def _thong_ke(self):
-        ds = doc_du_lieu()
-        if not ds:
-            messagebox.showinfo("Thống kê", "Chưa có dữ liệu.")
+    def xu_ly_nhan_chuot(self, event):
+        """Xử lý khi người dùng click vào bảng"""
+        region = self.bang_hang.identify_region(event.x, event.y)
+        if region != "cell":
             return
-        tong_sp = len(ds)
-        tong_ton_kho = sum(sp.so_luong for sp in ds)
-        tri_gia = sum(sp.gia * sp.so_luong for sp in ds)
-        sp_het = [sp.ten_sp for sp in ds if sp.so_luong == 0]
 
-        noi_dung = (
-            f"📦 Tổng số loại sản phẩm : {tong_sp}\n"
-            f"📊 Tổng tồn kho           : {tong_ton_kho} đơn vị\n"
-            f"💰 Tổng trị giá kho       : {tri_gia:,} VNĐ\n"
-        )
-        if sp_het:
-            noi_dung += f"\n⚠️  Sản phẩm hết hàng:\n" + "\n".join(f"   - {t}" for t in sp_het)
+        column = self.bang_hang.identify_column(event.x)
+        row_id = self.bang_hang.identify_row(event.y)
+        if not row_id:
+            return
 
-        messagebox.showinfo("Thống kê kho hàng", noi_dung)
+        col_index = int(column.replace("#", "")) - 1
+        columns = ("STT", "ma_sp", "ten_sp", "so_luong", "don_gia", "Sửa", "Xóa")
+        col_name = columns[col_index] if col_index < len(columns) else ""
+
+        if col_name == "Sửa":
+            self.mo_form_sua(row_id)
+        elif col_name == "Xóa":
+            if messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa sản phẩm này?"):
+                id_sp = self.bang_hang.item(row_id)["values"][0]
+                self.sp.xoa("id", str(id_sp))
+                self.bang_hang.delete(row_id)
+                messagebox.showinfo("Thành công", "Đã xóa sản phẩm!")
+
+    def mo_form_sua(self, row_id):
+        """Mở form sửa thông tin sản phẩm"""
+        values = self.bang_hang.item(row_id)["values"]
+        id_sp = str(values[0])
+
+        form = Toplevel(self.master)
+        form.title("Chỉnh sửa sản phẩm")
+        form.geometry("300x320")
+        form.grab_set()
+
+        tk.Label(form, text="Mã SP:").pack(pady=5)
+        entry_ma = tk.Entry(form)
+        entry_ma.insert(0, str(values[1]))
+        entry_ma.pack()
+
+        tk.Label(form, text="Tên SP:").pack(pady=5)
+        entry_ten = tk.Entry(form)
+        entry_ten.insert(0, str(values[2]))
+        entry_ten.pack()
+
+        tk.Label(form, text="Số lượng:").pack(pady=5)
+        entry_sl = tk.Entry(form)
+        entry_sl.insert(0, str(values[3]))
+        entry_sl.pack()
+
+        tk.Label(form, text="Đơn giá:").pack(pady=5)
+        entry_gia = tk.Entry(form)
+        entry_gia.insert(0, str(values[4]))
+        entry_gia.pack()
+
+        def xu_ly_cap_nhat():
+            new_data = [entry_ma.get().strip(), entry_ten.get().strip(),
+                        entry_sl.get().strip(), entry_gia.get().strip()]
+            title_edit = ["ma_sp", "ten_sp", "so_luong", "don_gia"]
+
+            self.sp.cap_nhat("id", id_sp, title_edit, new_data)
+            messagebox.showinfo("Thành công", "Đã cập nhật thông tin sản phẩm!")
+            form.destroy()
+            self.tai_du_lieu()
+
+        tk.Button(form, text="🔄 Cập nhật", command=xu_ly_cap_nhat, bg="#2980b9", fg="white").pack(pady=20)

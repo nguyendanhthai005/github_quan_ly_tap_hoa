@@ -26,7 +26,7 @@ class SanphamPage:
                   fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=15, pady=10)
         tk.Button(menu_frame, text="🛒 Bán hàng", command=self.app_manager.hien_thi_banhang_page, bg="#2c3e50",
                   fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=10, pady=10)
-        tk.Button(menu_frame, text="📥 Nhập hàng", command=self.app_manager.hien_thi_naphang_page, bg="#2c3e50",
+        tk.Button(menu_frame, text="📥 Thống kê", command=self.app_manager.hien_thi_thongke_page, bg="#2c3e50",
                   fg="white", relief="flat", font=("Arial", 11, "bold")).pack(side="left", padx=10, pady=10)
         tk.Button(menu_frame, text="🔄 Làm mới", command=self.tai_du_lieu, bg="#27ae60", fg="white", relief="flat",
                   font=("Arial", 11)).pack(side="right", padx=15, pady=10)
@@ -39,8 +39,7 @@ class SanphamPage:
         button_frame.pack(pady=5)
 
         tk.Button(button_frame, text="➕ Thêm sản phẩm", command=self.mo_form_them).pack(side="left", padx=5)
-        tk.Button(button_frame, text="🔙 Quay lại", command=self.app_manager.hien_thi_sanpham_page).pack(side="right",
-                                                                                                        padx=5)
+        tk.Button(button_frame, text="🔙 Quay lại", command=self.app_manager.hien_thi_sanpham_page).pack(side="right",  padx=5)
 
         # Bảng hiển thị (Treeview)
         tree_frame = tk.Frame(self.master)

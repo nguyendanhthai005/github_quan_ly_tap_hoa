@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pandas as pd
+from datetime import datetime
+import os
 from model.sanpham_model import SanphamModel
 
 
@@ -43,6 +45,16 @@ class BanHangPage:
             menu_frame,
             text="🛒 Bán hàng",
             command=self.app_manager.hien_thi_banhang_page,
+            bg="#2c3e50",
+            fg="white",
+            relief="flat",
+            font=("Arial", 11, "bold")
+        ).pack(side="left", padx=10)
+
+        tk.Button(
+        menu_frame,
+            text="📊 Thống kê",
+            command=self.app_manager.hien_thi_thongke_page,
             bg="#2c3e50",
             fg="white",
             relief="flat",
@@ -210,26 +222,59 @@ class BanHangPage:
 
     def thanh_toan(self):
         if len(self.gio_hang) == 0:
-            messagebox.showwarning("Thông báo", "Giỏ hàng đang trống")
+            messagebox.showwarning("Thông báo", "Giỏ hàng đang trống")  
             return
 
         data = pd.read_csv("data/sanpham.csv")
 
+        # Trừ số lượng tồn kho
         for item in self.gio_hang:
             index = data[data['id'].astype(str) == str(item['id'])].index
 
-            if len(index) > 0:
-                i = index[0]
-                data.loc[i, 'so_luong'] = int(data.loc[i, 'so_luong']) - item['so_luong']
+        if len(index) > 0:
+            i = index[0]
+
+            data.loc[i, 'so_luong'] = (
+                int(data.loc[i, 'so_luong']) - item['so_luong']
+            )
 
         data.to_csv("data/sanpham.csv", index=False)
 
+    # =========================
+    # Lưu lịch sử bán hàng
+    # =========================
+
+        file_lichsu = "data/lichsu_banhang.csv"
+
+        if not os.path.exists(file_lichsu):
+            df = pd.DataFrame(columns=[
+            'ngay_gio',
+            'ten_sp',
+            'so_luong',
+            'don_gia',
+            'thanh_tien'
+            ])
+
+            df.to_csv(file_lichsu, index=False)
+
+        lich_su = pd.read_csv(file_lichsu)
+
+        for item in self.gio_hang:
+            dong_moi = {
+            'ngay_gio': datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            'ten_sp': item['ten_sp'],
+            'so_luong': item['so_luong'],
+            'don_gia': item['don_gia'],
+            'thanh_tien': item['thanh_tien']
+        }
+
+            lich_su.loc[len(lich_su)] = dong_moi
+
+        lich_su.to_csv(file_lichsu, index=False)
+
         tong = sum(item['thanh_tien'] for item in self.gio_hang)
 
-        messagebox.showinfo(
-            "Thanh toán thành công",
-            f"Khách cần trả: {tong:,} VNĐ"
-        )
+        messagebox.showinfo("Thanh toán thành công",f"Khách cần trả: {tong:,} VNĐ")
 
         self.gio_hang = []
         self.cap_nhat_gio_hang()
